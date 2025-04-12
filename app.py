@@ -104,4 +104,3 @@ html_template = """
 """@app.route('/', methods=['GET', 'POST']) def home(): if request.method == 'POST': price = get_binance_price() msg = f"السعر الحالي للبتكوين: {price} دولار (إرسال يدوي)" send_telegram(msg) alerts.append(msg) return redirect('/') return render_template_string(html_template, alerts=alerts)
 
 threading.Thread(target=start_bot).start() app.run(host='0.0.0.0', port=10000)
-
