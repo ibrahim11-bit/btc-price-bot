@@ -8,7 +8,10 @@ def send_telegram(message): try: url = f"https://api.telegram.org/bot{telegram_t
 
 def get_binance_price(): try: url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT" response = requests.get(url, timeout=5) return float(response.json()["price"]) except Exception as e: print(f"خطأ في جلب السعر: {e}") sys.stdout.flush() return None
 
-def start_bot(): global alerts current_interval = datetime.now().replace(minute=(datetime.now().minute // 10) * 10, second=0, microsecond=0) daily_reference = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+def start_bot(): global alerts def get_10min_block(dt): return dt.replace(minute=(dt.minute // 10) * 10, second=0, microsecond=0)
+
+current_block = get_10min_block(datetime.now())
+daily_reference = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
 price = get_binance_price()
 high_price = price
@@ -42,8 +45,10 @@ while True:
             alerts.append(msg)
             last_5min_alert = now
 
-        new_interval = now.replace(minute=(now.minute // 10) * 10, second=0, microsecond=0)
-        if new_interval > current_interval:
+        current_block_now = get_10min_block(now)
+        if current_block_now > current_block:
+            print(f"بدأت فترة 10 دقائق جديدة: {current_block_now}")
+            sys.stdout.flush()
             buy_price = low_price
             sell_price = high_price
             profit = round(sell_price - buy_price, 2)
@@ -55,7 +60,7 @@ while True:
             send_telegram(summary)
             alerts.append(summary)
 
-            current_interval = new_interval
+            current_block = current_block_now
             high_price = price
             low_price = price
 
@@ -102,6 +107,5 @@ html_template = """
 </body></html>
 """@app.route('/', methods=['GET', 'POST']) def home(): if request.method == 'POST': price = get_binance_price() msg = f"السعر الحالي للبتكوين: {price} دولار (إرسال يدوي)" send_telegram(msg) alerts.append(msg) return redirect('/') return render_template_string(html_template, alerts=alerts)
 
-تشغيل البوت والواجهة
-
 threading.Thread(target=start_bot).start() app.run(host='0.0.0.0', port=10000)
+
