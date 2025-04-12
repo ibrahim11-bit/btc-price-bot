@@ -34,7 +34,6 @@ while True:
             time.sleep(3)
             continue
 
-        # طباعة السعر في كل لحظة
         print(f"{now.strftime('%H:%M:%S')} | السعر الحالي: {price} | القمة: {high_price} | القاع: {low_price}")
 
         # تنبيه كل 5 دقائق بالسعر الحالي
@@ -47,9 +46,20 @@ while True:
         # بداية ساعة جديدة
         new_hour = now.replace(minute=0, second=0, microsecond=0)
         if new_hour > current_hour:
+            # محاكاة تداول وهمي
+            buy_price = low_price
+            sell_price = high_price
+            profit = round(sell_price - buy_price, 2)
+            trade_summary = f"🧪 محاكاة التداول - ملخص الساعة:\n⬇️ شراء عند: {buy_price}\n⬆️ بيع عند: {sell_price}\n💰 الربح النظري: {profit} دولار (1 BTC)"
+            send_telegram(trade_summary)
+            alerts.append(trade_summary)
+
+            # ملخص الساعة العادي
             summary = f"🕐 ملخص الساعة:\n⬆️ أعلى سعر: {high_price}\n⬇️ أقل سعر: {low_price}\n↔️ الفرق: {round(high_price - low_price, 2)} دولار"
             send_telegram(summary)
             alerts.append(summary)
+
+            # إعادة التعيين
             current_hour = new_hour
             high_price = price
             low_price = price
@@ -94,11 +104,11 @@ while True:
 
 html_template = """
 
-<!DOCTYPE html><html lang="ar" dir="rtl">
-<head><meta charset="UTF-8"><title>بوت البتكوين</title></head>
+<!DOCTYPE html><html lang=\"ar\" dir=\"rtl\">
+<head><meta charset=\"UTF-8\"><title>بوت البتكوين</title></head>
 <body>
 <h2>البوت يعمل - BTC</h2>
-<form method="post"><button type="submit">إرسال السعر الآن</button></form>
+<form method=\"post\"><button type=\"submit\">إرسال السعر الآن</button></form>
 <ul>{% for a in alerts[-5:] %}<li>{{ a }}</li>{% endfor %}</ul>
 </body></html>
 """@app.route('/', methods=['GET', 'POST']) def home(): if request.method == 'POST': price = get_binance_price() msg = f"السعر الحالي للبتكوين: {price} دولار (إرسال يدوي)" send_telegram(msg) alerts.append(msg) return redirect('/') return render_template_string(html_template, alerts=alerts)
