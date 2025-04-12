@@ -8,10 +8,7 @@ def send_telegram(message): try: url = f"https://api.telegram.org/bot{telegram_t
 
 def get_binance_price(): try: url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT" response = requests.get(url, timeout=5) return float(response.json()["price"]) except Exception as e: print(f"خطأ في جلب السعر: {e}") sys.stdout.flush() return None
 
-def start_bot(): global alerts def get_10min_block(dt): return dt.replace(minute=(dt.minute // 10) * 10, second=0, microsecond=0)
-
-current_block = get_10min_block(datetime.now())
-daily_reference = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+def start_bot(): global alerts last_executed_minute = -1 daily_reference = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
 price = get_binance_price()
 high_price = price
@@ -45,9 +42,8 @@ while True:
             alerts.append(msg)
             last_5min_alert = now
 
-        current_block_now = get_10min_block(now)
-        if current_block_now > current_block:
-            print(f"بدأت فترة 10 دقائق جديدة: {current_block_now}")
+        if now.minute % 10 == 0 and now.second == 0 and now.minute != last_executed_minute:
+            print(f"⏰ تنفيذ محاكاة في نهاية 10 دقائق: {now.strftime('%H:%M')}\n")
             sys.stdout.flush()
             buy_price = low_price
             sell_price = high_price
@@ -60,9 +56,9 @@ while True:
             send_telegram(summary)
             alerts.append(summary)
 
-            current_block = current_block_now
             high_price = price
             low_price = price
+            last_executed_minute = now.minute
 
         if now.date() > daily_reference.date():
             daily_summary = f"📅 ملخص اليوم:\n⬆️ أعلى سعر: {daily_high}\n⬇️ أقل سعر: {daily_low}\n↔️ الفرق: {round(daily_high - daily_low, 2)} دولار"
