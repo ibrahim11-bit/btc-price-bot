@@ -2,7 +2,7 @@ import ccxt
 import requests
 import time
 
-# بيانات API من Binance (قراءة فقط)
+# بيانات API من Binance
 binance_api_key = "ufWZdhQkNw4TtfbIoWMLYLo5L4WFn7rKPvDBfhkgqn5lXsioB8cxlssWOL0mHkwN"
 binance_secret = "LjujCCnshLsCJPYaJ0bzOKmOPQfIJdR10NHkaYe7VojAJrIpAJatWdzlpDoBhOR5"
 
@@ -17,7 +17,7 @@ exchange = ccxt.binance({
     'enableRateLimit': True,
 })
 
-# تعقب القيم اليومية
+# تعقب أعلى وأدنى سعر
 highest = 0
 lowest = float('inf')
 
@@ -27,27 +27,26 @@ def send_telegram(msg):
     data = {"chat_id": chat_id, "text": msg}
     requests.post(url, data=data)
 
-# بدء المراقبة
+# بدء البوت
 send_telegram("تم تشغيل بوت مراقبة BTC/USDT")
+
 while True:
     try:
         ticker = exchange.fetch_ticker('BTC/USDT')
         price = ticker['last']
-        high = ticker['high']
-        low = ticker['low']
 
-        # تحديث القيم القصوى والدنيا
+        # فحص القمة الجديدة
         if price > highest:
             highest = price
-            send_telegram(f"سعر جديد مرتفع: {highest} USD")
+            send_telegram(f"قمة جديدة: {highest} USD")
 
+        # فحص القاع الجديد
         if price < lowest:
             lowest = price
-            send_telegram(f"سعر جديد منخفض: {lowest} USD")
+            send_telegram(f"قاع جديد: {lowest} USD")
 
-        print(f"السعر الحالي: {price}, أعلى: {highest}, أدنى: {lowest}")
-        time.sleep(60)  # تحديث كل دقيقة
-
+        time.sleep(1)  # تحديث سريع (كل ثانية)
+    
     except Exception as e:
         send_telegram(f"خطأ في البوت: {str(e)}")
-        time.sleep(2)
+        time.sleep(5)
