@@ -50,4 +50,4 @@ while True:
 
     except Exception as e:
         send_telegram(f"خطأ في البوت: {str(e)}")
-        time.sleep(60)
+        time.sleep(2)
